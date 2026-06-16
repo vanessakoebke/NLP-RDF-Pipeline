@@ -3,11 +3,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QTableWidget,
-    QTableWidgetItem
+    QTableWidgetItem,
 )
 from PySide6.QtCore import Qt
 
-class NerTab(QWidget):
+class RelationTab(QWidget):
 
     def __init__(self, mainwindow):
         super().__init__()
@@ -24,58 +24,40 @@ class NerTab(QWidget):
         self.table.leaveEvent = self.on_leave
         self.layout.addWidget(self.table)
 
-        self.NER_LABELS= {
-            "PERSON": "Person",
-            "NORP": "Nationalität, religiöse oder politische Gruppe",
-            "FAC": "Gebäude, Einrichtungen, Infrastruktur",
-            "ORG": "Organisation",
-            "GPE": "Geopolitische Einheit",
-            "LOC": "Geographischer Ort",
-            "PRODUCT": "Produkt",
-            "EVENT": "Ereignis",
-            "WORK_OF_ART": "Kunstwerk",
-            "LAW": "Gesetz / Rechtsnorm",
-            "LANGUAGE": "Sprache",
+        
 
-            "DATE": "Datum",
-            "TIME": "Zeitangabe",
-            "PERCENT": "Prozentangabe",
-            "MONEY": "Geldbetrag",
-            "QUANTITY": "Menge",
-            "ORDINAL": "Ordinalzahl",
-            "CARDINAL": "Kardinalzahl"
-        }
+    def set_result(self, relations):
+        
 
-    def set_result(self, ner):
-        self.info_label.setText(
-            f"Der eingegebene Text enthält {len(ner)} Named Entities."
-        )
-
-        self.table.setRowCount(len(ner))
-        self.table.setColumnCount(2)
+        self.table.setRowCount(len(relations))
+        self.table.setColumnCount(3)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.table.setColumnWidth(0, 100)
+
         self.table.setHorizontalHeaderLabels(
-            ["Entity", "Typ"]
+            ["Subjekt", "Relation", "Objekt"]
         )
 
-        for i, tupel in enumerate(ner):
+        for i, tupel in enumerate(relations):
 
             self.table.setItem(
                 i, 0,
-                QTableWidgetItem(str(tupel["text"]))
+                QTableWidgetItem(str(tupel["subject"]))
             )
 
-            item = QTableWidgetItem(str(tupel["label"]))
-            item.setToolTip(self.NER_LABELS.get(tupel["label"], tupel["label"]))
             self.table.setItem(
-                i, 1, item
+                i, 1,
+                QTableWidgetItem(str(tupel["predicate"]))
+            )
+
+            item = QTableWidgetItem(str(tupel["object"]))
+            self.table.setItem(
+                i, 2, item
             )
 
 
             self.table.item(i, 0).setData(Qt.UserRole, tupel["start"])
             self.table.item(i, 0).setData(Qt.UserRole + 1, tupel["end"])
-    
+
     def on_hover(self, row, col):
         item = self.table.item(row, 0)
         if not item:
@@ -92,5 +74,3 @@ class NerTab(QWidget):
     def on_leave(self, event):
         self.main_window.clear_highlight()
         super().leaveEvent(event)
-
-

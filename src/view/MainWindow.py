@@ -1,12 +1,16 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSplitter, QTextEdit, QTabWidget, QPushButton, QHBoxLayout, QProgressBar, QMessageBox
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
-from view.token_tab import token_tab
 from view.sentence_tab import sentence_tab
-from view.lemma_pos_tab import lemma_pos_tab
-from view.ner_tab import ner_tab
+from view.lemma_pos_tab import LemmaPosTab
+from view.ner_tab import NerTab
 from view.dependency_tab import dependency_tab
 from view.dependency_tree_tab import dependency_tree_tab
+from view.embeddings_tab import embeddings_tab
+from PySide6.QtGui import QTextCursor, QTextCharFormat
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QApplication
+from view.relations_tab import RelationTab
 
 class MainWindow(QMainWindow):
 
@@ -38,19 +42,7 @@ class MainWindow(QMainWindow):
         # Rechte Seite
         self.tabs = QTabWidget()
 
-        self.tab_sents = sentence_tab()
-        self.tab_tokens = token_tab()
-        self.tab_lemmas = lemma_pos_tab()
-        self.tab_dependencies = dependency_tab()
-        self.tab_ner = ner_tab()
-        self.tab_rdf = QWidget()
-
-        self.tabs.addTab(self.tab_sents, "Sätze")
-        self.tabs.addTab(self.tab_tokens, "Tokens")
-        self.tabs.addTab(self.tab_lemmas, "Lemmata und POS")
-        self.tabs.addTab(self.tab_dependencies, "Abhängigkeiten")
-        self.tabs.addTab(self.tab_ner, "NER")
-        self.tabs.addTab(self.tab_rdf, "RDF Tripel")
+        self.set_tabs()
 
 
         self.splitter.addWidget(self.tabs)
@@ -60,9 +52,11 @@ class MainWindow(QMainWindow):
 
         self.analyze_button = QPushButton("Analyse starten")
         self.export_button = QPushButton("Ergebnisse exportieren")
+        self.clear_button = QPushButton("Zurücksetzen")
 
         self.button_layout.addWidget(self.analyze_button)
         self.button_layout.addWidget(self.export_button)
+        self.button_layout.addWidget(self.clear_button)
 
         self.main_layout.addLayout(self.button_layout)
 
@@ -87,6 +81,9 @@ class MainWindow(QMainWindow):
     def get_input_text(self) -> str:
         return self.input_text.toPlainText()
     
+    def lock_text(self):
+        self.input_text.setReadOnly(True)
+    
     def set_progress(self, value: int):
         self.progress.setValue(value)
 
@@ -95,6 +92,11 @@ class MainWindow(QMainWindow):
     
     def show_message(self, msg: str):
         QMessageBox.information(self, "Info", msg)
+
+    def clear_all(self):
+        self.input_text.clear()
+        self.input_text.setReadOnly(False)
+        self.set_tabs()
     
     def show_results(self, result: dict):
         self.current_results = result
@@ -102,23 +104,18 @@ class MainWindow(QMainWindow):
         self.tabs.clear()
 
         # --- Sätze Tab ---
-        tab_sentences = sentence_tab()
+        tab_sentences = sentence_tab(self)
         tab_sentences.set_result(result.get("sentences"))
         self.tabs.addTab(tab_sentences, "Sätze")
 
 
-        # --- Tokens Tab ---
-        tab_tokens = token_tab()
-        tab_tokens.set_result(result.get("tokens"))
-        self.tabs.addTab(tab_tokens, "Tokens")
-
-        # --- Lemmata und POS Tab ---
-        tab_lemmas = lemma_pos_tab()
-        tab_lemmas.set_result(result.get("lemmas"), result.get("pos"))
-        self.tabs.addTab(tab_lemmas, "Lemmata und POS")
+        # --- Tokens, Lemmata und POS Tab ---
+        tab_lemmas = LemmaPosTab(self)
+        tab_lemmas.set_result(result.get("tokens"))
+        self.tabs.addTab(tab_lemmas, "Token, Lemmata und POS")
 
         # --- NER Tab ---
-        tab_ner = ner_tab()
+        tab_ner = NerTab(self)
         tab_ner.set_result(result.get("ner"))
         self.tabs.addTab(tab_ner, "NER")
 
@@ -132,5 +129,53 @@ class MainWindow(QMainWindow):
         tab_dependency_tree.set_result(result.get("dependency_html"))
         self.tabs.addTab(tab_dependency_tree, "Abhängigkeitenbaum")
 
+        # --- Embeddings Tab ---
+        tab_embeddings = embeddings_tab()
+        tab_embeddings.set_result(result.get("embeddings"))
+        self.tabs.addTab(tab_embeddings, "Embeddings")
+
+        # --- Relations Tab ---
+        tab_relations = RelationTab(self)
+        tab_relations.set_result(result.get("relations"))
+        self.tabs.addTab(tab_relations, "Relationen")
+
+
+    def highlight_text(self, start: int, end: int):
+        cursor = self.input_text.textCursor()
+
+        cursor.setPosition(start)
+        cursor.setPosition(end, QTextCursor.KeepAnchor)
+
+
+        color = QApplication.palette().color(QPalette.Highlight)
+        fmt = QTextCharFormat()
+        fmt.setBackground(color)
+
+        selection = QTextEdit.ExtraSelection()
+        selection.cursor = cursor
+        selection.format = fmt
+
+        self.input_text.setExtraSelections([selection])
+
+    def clear_highlight(self):
+        self.input_text.setExtraSelections([])
+
+    def set_tabs(self):
+        self.tabs.clear()
+        self.tab_sents = sentence_tab(self)
+        self.tab_lemmas = LemmaPosTab(self)
+        self.tab_dependencies = dependency_tab()
+        self.tab_ner = NerTab(self)
+        self.tab_embeddings = embeddings_tab()
+        self.tab_rdf = QWidget()
+        self.tab_relations = RelationTab(self)
+
+        self.tabs.addTab(self.tab_sents, "Sätze")
+        self.tabs.addTab(self.tab_lemmas, "Tokens, Lemmata und POS")
+        self.tabs.addTab(self.tab_dependencies, "Abhängigkeiten")
+        self.tabs.addTab(self.tab_ner, "NER")
+        self.tabs.addTab(self.tab_embeddings, "Embeddings")
+        self.tabs.addTab(self.tab_rdf, "RDF Tripel")
+        self.tabs.addTab(self.tab_relations, "Relationen")
         
         

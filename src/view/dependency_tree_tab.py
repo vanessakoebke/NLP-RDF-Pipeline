@@ -62,7 +62,7 @@ class dependency_tree_tab(QWidget):
         for i, item in enumerate(self.dependency_html):
 
             btn = QPushButton(
-                f"{item['sentence'][:40]}..."
+                f"{item['sentence'][:100]}..."
             )
 
             # stabiler Signal-Handler (kein Lambda-Bug)

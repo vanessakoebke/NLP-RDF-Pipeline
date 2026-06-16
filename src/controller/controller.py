@@ -8,10 +8,14 @@ class Controller:
     def _connect_signals(self):
         self.view.analyze_button.clicked.connect(self.analyze)
         self.view.export_button.clicked.connect(self.export)
+        self.view.clear_button.clicked.connect(self.clear_text_field)
+
+    def clear_text_field(self):
+        self.view.clear_all()
 
     def analyze(self):
         text = self.view.get_input_text()
-
+        self.view.lock_text()
         if not text.strip():
             self.view.show_error("Kein Text eingegeben.")
             return
