@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QScrollArea
 from PySide6.QtWebEngineWidgets import QWebEngineView
+from spacy import displacy
 
 
 class dependency_tree_tab(QWidget):
@@ -37,13 +38,13 @@ class dependency_tree_tab(QWidget):
         self.main_layout.addWidget(self.web_view, stretch=4)
 
         # Daten
-        self.dependency_html = []
+        self.dependency_trees = []
 
     # -------------------------
     # Daten setzen
     # -------------------------
-    def set_result(self, dependency_html):
-        self.dependency_html = dependency_html
+    def set_result(self, dependency_trees):
+        self.dependency_trees = dependency_trees or []
         self.set_sentences()
 
     # -------------------------
@@ -59,25 +60,31 @@ class dependency_tree_tab(QWidget):
                 widget.deleteLater()
 
         # neue Buttons
-        for i, item in enumerate(self.dependency_html):
+        for i, item in enumerate(self.dependency_trees):
 
             btn = QPushButton(
                 f"{item['sentence'][:100]}..."
             )
 
             # stabiler Signal-Handler (kein Lambda-Bug)
-            btn.clicked.connect(self.make_handler(item["html"]))
+            btn.clicked.connect(self.make_handler(item))
 
             self.button_layout.addWidget(btn)
 
     # -------------------------
     # Click Handler
     # -------------------------
-    def make_handler(self, html):
-        return lambda checked=False: self.show_html(html)
+    def make_handler(self, dependency_tree):
+        return lambda checked=False: self.show_dependency_tree(dependency_tree)
 
     # -------------------------
     # HTML anzeigen
     # -------------------------
-    def show_html(self, html):
+    def show_dependency_tree(self, dependency_tree):
+        html = displacy.render(
+            dependency_tree,
+            style="dep",
+            manual=True,
+            page=True
+        )
         self.web_view.setHtml(html)

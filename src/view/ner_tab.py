@@ -1,50 +1,11 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QTableWidget,
-    QTableWidgetItem
-)
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
+from model.label_descriptions import NER_LABELS
+from view.base_table_tab import ResultTab
 
-class NerTab(QWidget):
+class NerTab(ResultTab):
 
     def __init__(self, mainwindow):
-        super().__init__()
-        self.main_window = mainwindow
-        self.layout = QVBoxLayout(self)
-
-        self.info_label = QLabel()
-        self.layout.addWidget(self.info_label)
-
-        self.table = QTableWidget()
-        self.table.setMouseTracking(True)
-        self.table.viewport().setMouseTracking(True)
-        self.table.cellEntered.connect(self.on_hover)
-        self.table.leaveEvent = self.on_leave
-        self.layout.addWidget(self.table)
-
-        self.NER_LABELS= {
-            "PERSON": "Person",
-            "NORP": "Nationalität, religiöse oder politische Gruppe",
-            "FAC": "Gebäude, Einrichtungen, Infrastruktur",
-            "ORG": "Organisation",
-            "GPE": "Geopolitische Einheit",
-            "LOC": "Geographischer Ort",
-            "PRODUCT": "Produkt",
-            "EVENT": "Ereignis",
-            "WORK_OF_ART": "Kunstwerk",
-            "LAW": "Gesetz / Rechtsnorm",
-            "LANGUAGE": "Sprache",
-
-            "DATE": "Datum",
-            "TIME": "Zeitangabe",
-            "PERCENT": "Prozentangabe",
-            "MONEY": "Geldbetrag",
-            "QUANTITY": "Menge",
-            "ORDINAL": "Ordinalzahl",
-            "CARDINAL": "Kardinalzahl"
-        }
+        super().__init__(mainwindow=mainwindow, highlight_column=0)
 
     def set_result(self, ner):
         self.info_label.setText(
@@ -67,30 +28,9 @@ class NerTab(QWidget):
             )
 
             item = QTableWidgetItem(str(tupel["label"]))
-            item.setToolTip(self.NER_LABELS.get(tupel["label"], tupel["label"]))
+            item.setToolTip(NER_LABELS.get(tupel["label"], tupel["label"]))
             self.table.setItem(
                 i, 1, item
             )
 
-
-            self.table.item(i, 0).setData(Qt.UserRole, tupel["start"])
-            self.table.item(i, 0).setData(Qt.UserRole + 1, tupel["end"])
-    
-    def on_hover(self, row, col):
-        item = self.table.item(row, 0)
-        if not item:
-            return
-
-        start = item.data(Qt.UserRole)
-        end = item.data(Qt.UserRole + 1)
-
-        if start is None or end is None:
-            return
-
-        self.main_window.highlight_text(start, end)
-    
-    def on_leave(self, event):
-        self.main_window.clear_highlight()
-        super().leaveEvent(event)
-
-
+            self.set_highlight(self.table.item(i, 0), tupel["start"], tupel["end"])

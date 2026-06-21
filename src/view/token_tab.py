@@ -1,23 +1,10 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QTableWidget,
-    QTableWidgetItem
-)
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
+from view.base_table_tab import ResultTab
 
-class token_tab(QWidget):
+class token_tab(ResultTab):
 
     def __init__(self):
         super().__init__()
-
-        self.layout = QVBoxLayout(self)
-
-        self.info_label = QLabel()
-        self.layout.addWidget(self.info_label)
-
-        self.table = QTableWidget()
-        self.layout.addWidget(self.table)
 
     def set_result(self, tokens):
         self.info_label.setText(

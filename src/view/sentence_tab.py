@@ -1,29 +1,10 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QTableWidget,
-    QTableWidgetItem
-)
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
+from view.base_table_tab import ResultTab
 
-class sentence_tab(QWidget):
+class sentence_tab(ResultTab):
 
     def __init__(self, mainwindow):
-        super().__init__()
-        self.main_window = mainwindow
-        self.layout = QVBoxLayout(self)
-
-        self.info_label = QLabel()
-        self.layout.addWidget(self.info_label)
-
-        self.table = QTableWidget()
-        self.table.setMouseTracking(True)
-        self.table.viewport().setMouseTracking(True)
-        self.table.cellEntered.connect(self.on_hover)
-        self.table.leaveEvent = self.on_leave
-
-        self.layout.addWidget(self.table)
+        super().__init__(mainwindow=mainwindow, highlight_column=0)
 
     def set_result(self, sentences):
         if len(sentences) == 1:
@@ -44,25 +25,7 @@ class sentence_tab(QWidget):
         for i, sent in enumerate(sentences):
             item = QTableWidgetItem(str(sent.get("text")))
 
-            item.setData(Qt.UserRole, sent["start"])
-            item.setData(Qt.UserRole + 1, sent["end"])
+            self.set_highlight(item, sent["start"], sent["end"])
             self.table.setItem(
                 i, 0, item
             )
-
-    def on_hover(self, row, col):
-        item = self.table.item(row, 0)
-        if not item:
-            return
-
-        start = item.data(Qt.UserRole)
-        end = item.data(Qt.UserRole + 1)
-
-        if start is None or end is None:
-            return
-
-        self.main_window.highlight_text(start, end)
-    
-    def on_leave(self, event):
-        self.main_window.clear_highlight()
-        super().leaveEvent(event)

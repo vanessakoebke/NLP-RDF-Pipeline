@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSplitter, QTextEdit, QTabWidget, QPushButton, QHBoxLayout, QProgressBar, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSplitter, QTextEdit, QTabWidget, QPushButton, QHBoxLayout, QProgressBar, QMessageBox, QFileDialog
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from view.sentence_tab import sentence_tab
@@ -93,14 +93,22 @@ class MainWindow(QMainWindow):
     def show_message(self, msg: str):
         QMessageBox.information(self, "Info", msg)
 
+    def get_export_path(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Ergebnisse exportieren",
+            "analysis_results.json",
+            "JSON-Dateien (*.json);;Alle Dateien (*)"
+        )
+        return path
+
     def clear_all(self):
         self.input_text.clear()
         self.input_text.setReadOnly(False)
+        self.set_progress(0)
         self.set_tabs()
     
     def show_results(self, result: dict):
-        self.current_results = result
-
         self.tabs.clear()
 
         # --- Sätze Tab ---
@@ -126,7 +134,7 @@ class MainWindow(QMainWindow):
 
         # --- Dependency Tree Tab ---
         tab_dependency_tree = dependency_tree_tab()
-        tab_dependency_tree.set_result(result.get("dependency_html"))
+        tab_dependency_tree.set_result(result.get("dependency_trees"))
         self.tabs.addTab(tab_dependency_tree, "Abhängigkeitenbaum")
 
         # --- Embeddings Tab ---

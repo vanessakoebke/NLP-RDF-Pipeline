@@ -1,97 +1,11 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QTableWidget,
-    QTableWidgetItem
-)
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
+from model.label_descriptions import DEP_DESCRIPTIONS
+from view.base_table_tab import ResultTab
 
-class dependency_tab(QWidget):
+class dependency_tab(ResultTab):
 
     def __init__(self):
-        super().__init__()
-
-        self.layout = QVBoxLayout(self)
-
-        self.table = QTableWidget()
-        self.layout.addWidget(self.table)
-        self.DEP_DESCRIPTIONS = {
-            "ROOT": "Hauptverb",
-
-            "nsubj": "Nominales Subjekt",
-            "nsubjpass": "Subjekt im Passivsatz",
-            "csubj": "Satz als Subjekt",
-            "csubjpass": "Satz als Subjekt im Passiv",
-
-            "obj": "Objekt",
-            "dobj": "Direktes Objekt",
-            "iobj": "Indirektes Objekt",
-            "pobj": "Präpositionalobjekt",
-
-            "attr": "Attribut",
-            "oprd": "Objektsprädikativ",
-
-            "amod": "Adjektivattribut",
-            "advmod": "Adverbiale Bestimmung",
-            "npadvmod": "Nominale adverbiale Bestimmung",
-            "quantmod": "Quantifizierende Bestimmung",
-
-            "det": "Artikel oder Determinierer",
-            "predet": "Vorangestellter Determinierer",
-            "poss": "Possessivbestimmung",
-            "possessive": "Possessivmarker",
-
-            "compound": "Teil eines zusammengesetzten Begriffs",
-            "prt": "Verbpartikel",
-            "case": "Kasusmarker oder Präposition",
-
-            "prep": "Präpositionale Beziehung",
-            "agent": "Handelnder im Passivsatz",
-
-            "acl": "Attributiver Nebensatz",
-            "relcl": "Relativsatz",
-            "advcl": "Adverbialer Nebensatz",
-
-            "xcomp": "Offene Satzergänzung ohne eigenes Subjekt",
-            "ccomp": "Satzergänzung mit eigenem Subjekt",
-
-            "aux": "Hilfsverb",
-            "auxpass": "Hilfsverb im Passiv",
-            "cop": "Kopulaverb",
-
-            "mark": "Einleitendes Wort eines Nebensatzes",
-            "expl": "Expletives Subjekt",
-
-            "cc": "Koordinierende Konjunktion",
-            "conj": "Durch Konjunktion verbundenes Element",
-            "preconj": "Vorangestellte Konjunktion",
-
-            "punct": "Satzzeichen",
-
-            "appos": "Apposition (erläuternder Zusatz)",
-            "nmod": "Nominale Ergänzung",
-            "obl": "Adverbiale Ergänzung",
-
-            "parataxis": "Nebenordnung von Satzteilen",
-            "dep": "Nicht genauer spezifizierte Abhängigkeit",
-
-            "intj": "Interjektion",
-            "discourse": "Diskursmarker",
-            "vocative": "Anrede",
-
-            "meta": "Metasprachliches Element",
-            "reparandum": "Korrigierter Versprecher oder Fehler",
-
-            "list": "Listenelement",
-            "orphan": "Verwaister Satzteil",
-            "goeswith": "Zusammengehöriges Wortfragment",
-            "fixed": "Feste Wortverbindung",
-            "flat": "Flache mehrteilige Benennung",
-
-            "neg": "Negation",
-            "number": "Zahlenmodifikator",
-            "npmod": "Nominale Modifikation"
-        }
+        super().__init__(show_info_label=False)
 
     def set_result(self, dependencies):
 
@@ -110,7 +24,7 @@ class dependency_tab(QWidget):
                 QTableWidgetItem(str(tupel[0]))
             )
             item = QTableWidgetItem(str(tupel[1]))
-            item.setToolTip(self.DEP_DESCRIPTIONS.get(tupel[1], tupel[1]))
+            item.setToolTip(DEP_DESCRIPTIONS.get(tupel[1], tupel[1]))
             self.table.setItem(
                 i, 1,
                 item
@@ -119,4 +33,3 @@ class dependency_tab(QWidget):
                 i, 2,
                 QTableWidgetItem(str(tupel[2]))
             )
-

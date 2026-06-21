@@ -1,7 +1,9 @@
 class Controller:
-    def __init__(self, view, pipeline):
+    def __init__(self, view, pipeline, exporter):
         self.view = view
         self.pipeline = pipeline
+        self.exporter = exporter
+        self.current_result = None
 
         self._connect_signals()
     
@@ -11,15 +13,16 @@ class Controller:
         self.view.clear_button.clicked.connect(self.clear_text_field)
 
     def clear_text_field(self):
+        self.current_result = None
         self.view.clear_all()
 
     def analyze(self):
         text = self.view.get_input_text()
-        self.view.lock_text()
         if not text.strip():
             self.view.show_error("Kein Text eingegeben.")
             return
 
+        self.view.lock_text()
         self.view.set_progress(0)
 
         result = self.pipeline.analyze(
@@ -27,6 +30,7 @@ class Controller:
             progress_callback=self.update_progressbar
         )
 
+        self.current_result = result
         self.view.show_results(result)
         self.view.set_progress(100)
 
@@ -34,11 +38,13 @@ class Controller:
         self.view.set_progress(value)
 
     def export(self):
-        result = self.view.get_current_results()
-
-        if not result:
+        if not self.current_result:
             self.view.show_error("Keine Ergebnisse zu exportieren.")
             return
 
-        self.pipeline.export(result)
+        export_path = self.view.get_export_path()
+        if not export_path:
+            return
+
+        self.exporter.export(self.current_result, export_path)
         self.view.show_message("Export erfolgreich.")
